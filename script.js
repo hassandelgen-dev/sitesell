@@ -1382,14 +1382,16 @@ function initSupportWidget() {
     if (isOpen) questionInput.focus();
   };
 
+  const pollIntervalMs = 1200;
+
   // Polling for new messages from support
   const pollMessages = async () => {
     if (!supportElements) return;
     try {
       const endpoint = await resolveTelegramEndpoint();
-      const messagesUrl = endpoint.replace("/api/telegram", `/api/telegram/messages/${sessionId}`);
+      const messagesUrl = endpoint.replace("/api/telegram", `/api/telegram/messages/${sessionId}?t=${Date.now()}`);
       
-      const response = await fetch(messagesUrl);
+      const response = await fetch(messagesUrl, { cache: "no-store" });
       if (!response.ok) return;
 
       const data = await response.json();
@@ -1415,12 +1417,18 @@ function initSupportWidget() {
     }
   };
 
-  // Start polling every 3 seconds when panel is open
+  // Start fast polling while chat is open/active
   const pollingInterval = setInterval(() => {
-    if (wrapper.classList.contains("is-open")) {
+    if (wrapper.classList.contains("is-open") && document.visibilityState === "visible") {
       pollMessages();
     }
-  }, 3000);
+  }, pollIntervalMs);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && wrapper.classList.contains("is-open")) {
+      pollMessages();
+    }
+  });
 
   launcher.addEventListener("click", () => {
     const currentlyOpen = wrapper.classList.contains("is-open");
