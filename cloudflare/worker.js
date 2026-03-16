@@ -3,6 +3,14 @@ const SESSION_TTL_SECONDS = 86400 * 7;
 const TICKETS_INDEX_KEY = "tickets:index";
 const TICKETS_PAGE_SIZE = 8;
 
+async function initDb(env) {
+  if (!env.DB) return;
+  await env.DB.prepare(
+    "CREATE TABLE IF NOT EXISTS sessions (session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at INTEGER NOT NULL)"
+  ).run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_sessions_updated_at ON sessions(updated_at DESC)").run();
+}
+
 function getAllowedOrigin(request, env) {
   const origin = request.headers.get("Origin") || "";
   if (!origin) return "*";
@@ -212,6 +220,19 @@ async function editTelegramMessage(botToken, chatId, messageId, text, replyMarku
 }
 
 async function getSession(env, sessionId) {
+  if (env.DB) {
+    await initDb(env);
+    const row = await env.DB.prepare("SELECT payload FROM sessions WHERE session_id = ?").bind(sessionId).first();
+    if (row?.payload) {
+      try {
+        const parsed = JSON.parse(row.payload);
+        if (parsed && typeof parsed === "object") return parsed;
+      } catch {
+        // fallback below
+      }
+    }
+  }
+
   if (!env.CHATS) return { messages: [], createdAt: Date.now(), updatedAt: Date.now(), client: {} };
   const key = `session:${sessionId}`;
   const value = await env.CHATS.get(key, "json");
@@ -220,6 +241,17 @@ async function getSession(env, sessionId) {
 }
 
 async function saveSession(env, sessionId, sessionData) {
+  if (env.DB) {
+    await initDb(env);
+    const updatedAt = Number(sessionData?.updatedAt || Date.now());
+    await env.DB.prepare(
+      `INSERT INTO sessions(session_id, payload, updated_at) VALUES(?, ?, ?)
+       ON CONFLICT(session_id) DO UPDATE SET payload=excluded.payload, updated_at=excluded.updated_at`
+    )
+      .bind(sessionId, JSON.stringify(sessionData), updatedAt)
+      .run();
+  }
+
   if (!env.CHATS) return;
   await env.CHATS.put(`session:${sessionId}`, JSON.stringify(sessionData), { expirationTtl: SESSION_TTL_SECONDS });
 }
@@ -253,17 +285,42 @@ async function addReply(env, sessionId, replyText) {
 }
 
 async function getTicketsIndex(env) {
+  if (env.DB) {
+    await initDb(env);
+    const rows = await env.DB.prepare("SELECT session_id, payload, updated_at FROM sessions ORDER BY updated_at DESC LIMIT 500").all();
+    const list = (rows?.results || [])
+      .map((row) => {
+        try {
+          const payload = JSON.parse(row.payload || "{}");
+          const messages = Array.isArray(payload?.messages) ? payload.messages : [];
+          const lastUser = [...messages].reverse().find((item) => item?.type === "user");
+          return {
+            sessionId: row.session_id,
+            updatedAt: Number(row.updated_at || payload?.updatedAt || Date.now()),
+            lastUserText: String(lastUser?.text || "").trim(),
+            client: payload?.client || {},
+          };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+    return list;
+  }
+
   if (!env.CHATS) return [];
   const data = await env.CHATS.get(TICKETS_INDEX_KEY, "json");
   return Array.isArray(data?.items) ? data.items : [];
 }
 
 async function saveTicketsIndex(env, items) {
+  if (env.DB) return;
   if (!env.CHATS) return;
   await env.CHATS.put(TICKETS_INDEX_KEY, JSON.stringify({ items }), { expirationTtl: SESSION_TTL_SECONDS });
 }
 
 async function upsertTicket(env, ticket) {
+  if (env.DB) return;
   const items = await getTicketsIndex(env);
   const next = items.filter((item) => item.sessionId !== ticket.sessionId);
   next.unshift(ticket);

@@ -7,5 +7,10 @@ binding = "CHATS"
 id = "9d6f16e9489444978d212a831898a389"
 preview_id = "d0bbc1b0e229495ca524dd2b576d3bc4"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "sitemy-chat"
+database_id = "d9ed7bf7-5374-4fea-a546-76a847c8f636"
+
 [observability]
 enabled = true
