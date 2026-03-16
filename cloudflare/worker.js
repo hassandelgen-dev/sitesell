@@ -294,6 +294,12 @@ function generateSessionId() {
   return generateId("sess");
 }
 
+function extractSessionId(text) {
+  const source = String(text || "");
+  const match = source.match(/sess_[a-z0-9_]+/i);
+  return match ? match[0] : "";
+}
+
 async function showTicketList(botToken, env, chatId, page = 0, edit = null) {
   const all = await getTicketsIndex(env);
   const safePage = Math.max(0, page);
@@ -383,10 +389,23 @@ async function processTelegramWebhook(update, env) {
   const userId = message?.from?.id;
   const chatId = message?.chat?.id;
   const text = String(message?.text || "").trim();
+  const replyText = String(message?.reply_to_message?.text || message?.reply_to_message?.caption || "").trim();
+  const replySessionId = extractSessionId(replyText);
   if (!isAuthorizedAdmin(env, userId)) return;
 
   if (text === "/start" || text === "/tickets") {
     await showTicketList(botToken, env, chatId, 0);
+    return;
+  }
+
+  if (replySessionId && text && !text.startsWith("/")) {
+    await addReply(env, replySessionId, text);
+    await sendTelegramMessage(
+      botToken,
+      chatId,
+      `✅ Ответ отправлен клиенту\nТикет: <code>${escapeHtml(replySessionId)}</code>`,
+      { reply_markup: ticketButtons(replySessionId) },
+    );
     return;
   }
 

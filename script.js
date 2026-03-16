@@ -1330,6 +1330,7 @@ function initSupportWidget() {
     messages,
     sessionId,
     lastMessageTimestamp: 0,
+    renderedBotMessages: new Set(),
   };
 
   const setOpen = (isOpen) => {
@@ -1361,10 +1362,20 @@ function initSupportWidget() {
       if (!data.ok || !Array.isArray(data.messages)) return;
 
       data.messages.forEach((msg) => {
-        if (msg.type === "bot" && msg.timestamp > supportElements.lastMessageTimestamp) {
+        const messageKey = msg.id || `${msg.timestamp || 0}:${msg.text || ""}`;
+        if (
+          msg.type === "bot" &&
+          !supportElements.renderedBotMessages.has(messageKey) &&
+          Number(msg.timestamp || 0) >= Number(supportElements.lastMessageTimestamp || 0)
+        ) {
           addMessageToUI(msg.text, false);
-          supportElements.lastMessageTimestamp = msg.timestamp;
+          supportElements.renderedBotMessages.add(messageKey);
         }
+
+        supportElements.lastMessageTimestamp = Math.max(
+          Number(supportElements.lastMessageTimestamp || 0),
+          Number(msg.timestamp || 0),
+        );
       });
     } catch {
       // Silently ignore polling errors
@@ -1417,7 +1428,6 @@ function initSupportWidget() {
 
       addMessageToUI(question, true);
       addMessageToUI(localePack.sent, false);
-      supportElements.lastMessageTimestamp = Date.now();
 
       formElement.reset();
       status.textContent = localePack.sent;
