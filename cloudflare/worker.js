@@ -86,6 +86,21 @@ async function getMessages(env, sessionId) {
   return data.messages || [];
 }
 
+async function addReply(env, sessionId, replyText) {
+  if (!env.CHATS) return false;
+  
+  const key = `session:${sessionId}`;
+  const data = await env.CHATS.get(key, "json") || { messages: [] };
+  data.messages.push({
+    id: "reply_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9),
+    type: "bot",
+    text: replyText,
+    timestamp: Date.now(),
+  });
+  await env.CHATS.put(key, JSON.stringify(data), { expirationTtl: 86400 * 7 });
+  return true;
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
@@ -103,6 +118,30 @@ export default {
         return jsonResponse(request, env, 200, { ok: true, messages });
       } catch {
         return jsonResponse(request, env, 500, { ok: false, message: "Ошибка при получении сообщений" });
+      }
+    }
+
+    // Отправить ответ поддержки (требует админ ключ)
+    if (pathname === "/api/telegram/reply" && request.method === "POST") {
+      const adminKey = request.headers.get("X-Admin-Key") || "";
+      const expectedKey = env.ADMIN_KEY || "";
+      
+      if (!expectedKey || adminKey !== expectedKey) {
+        return jsonResponse(request, env, 401, { ok: false, message: "Unauthorized" });
+      }
+
+      try {
+        const body = await request.json();
+        const { sessionId, reply } = body;
+
+        if (!sessionId || !reply || typeof reply !== "string") {
+          return jsonResponse(request, env, 400, { ok: false, message: "Missing sessionId or reply" });
+        }
+
+        await addReply(env, sessionId, reply);
+        return jsonResponse(request, env, 200, { ok: true });
+      } catch {
+        return jsonResponse(request, env, 500, { ok: false, message: "Internal server error" });
       }
     }
 
