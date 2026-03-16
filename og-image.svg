@@ -1,0 +1,45 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="40" x2="1030" y2="590" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1433"/>
+      <stop offset="1" stop-color="#060B1F"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="240" y1="100" x2="940" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7B90FF"/>
+      <stop offset="1" stop-color="#65EFD8"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(930 80) rotate(124) scale(270 270)">
+      <stop stop-color="#7B90FF" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#7B90FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(170 560) rotate(16) scale(280 280)">
+      <stop stop-color="#65EFD8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#65EFD8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" rx="32" fill="url(#bg)"/>
+  <rect width="1200" height="630" rx="32" fill="url(#glow1)"/>
+  <rect width="1200" height="630" rx="32" fill="url(#glow2)"/>
+
+  <rect x="76" y="70" width="130" height="130" rx="28" fill="url(#accent)"/>
+  <text x="141" y="153" text-anchor="middle" fill="white" font-size="68" font-family="Inter, Arial, sans-serif" font-weight="800">S</text>
+
+  <text x="76" y="295" fill="#F3F6FF" font-size="68" font-family="Inter, Arial, sans-serif" font-weight="800">
+    SiteMy — создание сайтов под ключ
+  </text>
+  <text x="76" y="360" fill="#B7C6EE" font-size="32" font-family="Inter, Arial, sans-serif" font-weight="500">
+    Лендинги • Корпоративные сайты • Интернет-магазины • Web-приложения
+  </text>
+  <text x="76" y="418" fill="#B7C6EE" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="500">
+    Стратегия, дизайн, разработка, SEO-подготовка и запуск под заявки
+  </text>
+
+  <rect x="76" y="484" width="266" height="62" rx="18" fill="rgba(20,40,95,0.78)" stroke="#2B478F"/>
+  <text x="109" y="523" fill="#CBFFF5" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="700">+38% рост заявок</text>
+
+  <rect x="366" y="484" width="224" height="62" rx="18" fill="rgba(20,40,95,0.78)" stroke="#2B478F"/>
+  <text x="398" y="523" fill="#EAF0FF" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="700">от 7 дней</text>
+
+  <rect x="614" y="484" width="346" height="62" rx="18" fill="rgba(20,40,95,0.78)" stroke="#2B478F"/>
+  <text x="646" y="523" fill="#EAF0FF" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="700">SEO + аналитика + дизайн</text>
+</svg>
