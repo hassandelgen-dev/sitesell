@@ -8,6 +8,8 @@ const leadStatus = document.getElementById("leadStatus");
 const PAGE_LOADED_AT = Date.now();
 const MIN_FILL_MS = 3000;
 const API_URL_STORAGE_KEY = "sitemy_api_url";
+const SUPPORT_SESSION_KEY = "supportSessionId";
+const SUPPORT_PROFILE_PREFIX = "supportProfile:";
 let siteConfigPromise = null;
 
 const LANG_KEY = "sitemy_lang";
@@ -167,6 +169,7 @@ const SUPPORT_LOCALE = {
     send: "Отправить в поддержку",
     sent: "Сообщение отправлено ✅",
     needFields: "Укажите контакт и вопрос.",
+    needQuestion: "Введите вопрос.",
     failed: "Не удалось отправить сообщение.",
     open: "Поддержка",
     close: "Свернуть",
@@ -182,6 +185,7 @@ const SUPPORT_LOCALE = {
     send: "Надіслати в підтримку",
     sent: "Повідомлення надіслано ✅",
     needFields: "Вкажіть контакт і питання.",
+    needQuestion: "Введіть питання.",
     failed: "Не вдалося надіслати повідомлення.",
     open: "Підтримка",
     close: "Згорнути",
@@ -197,6 +201,7 @@ const SUPPORT_LOCALE = {
     send: "Send to support",
     sent: "Message sent ✅",
     needFields: "Please provide contact details and your question.",
+    needQuestion: "Please type your message.",
     failed: "Failed to send message.",
     open: "Support",
     close: "Minimize",
@@ -1242,6 +1247,7 @@ function getSupportLocale() {
 function updateSupportWidgetLanguage() {
   if (!supportElements) return;
   const localePack = getSupportLocale();
+  const needsInitialProfile = !supportElements.hasSentInitialMessage;
   supportElements.title.textContent = localePack.title;
   supportElements.subtitle.textContent = localePack.subtitle;
   supportElements.welcome.textContent = localePack.welcome;
@@ -1251,6 +1257,10 @@ function updateSupportWidgetLanguage() {
   supportElements.sendButton.textContent = localePack.send;
   supportElements.launcherLabel.textContent = localePack.open;
   supportElements.closeButton.textContent = localePack.close;
+
+  supportElements.nameInput.style.display = needsInitialProfile ? "" : "none";
+  supportElements.contactInput.style.display = needsInitialProfile ? "" : "none";
+  supportElements.contactInput.required = needsInitialProfile;
 }
 
 function initSupportWidget() {
@@ -1305,12 +1315,40 @@ function initSupportWidget() {
     return;
   }
 
+  const buildMessageKey = (msg) => msg.id || `${msg.type || "msg"}:${msg.timestamp || 0}:${msg.text || ""}`;
+  const addMessageToUI = (text, isUser) => {
+    const message = document.createElement("div");
+    message.className = `support-message ${isUser ? "support-message-user" : "support-message-bot"}`;
+    message.textContent = text;
+    messages.appendChild(message);
+    messages.scrollTop = messages.scrollHeight;
+  };
+
+  const applyMessageFromServer = (msg) => {
+    const key = buildMessageKey(msg);
+    if (supportElements.renderedMessages.has(key)) return;
+    addMessageToUI(msg.text || "", msg.type !== "bot");
+    supportElements.renderedMessages.add(key);
+  };
+
   // Generate or restore session ID
-  let sessionId = localStorage.getItem("supportSessionId");
+  let sessionId = localStorage.getItem(SUPPORT_SESSION_KEY);
   if (!sessionId) {
     sessionId = "sess_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem("supportSessionId", sessionId);
+    localStorage.setItem(SUPPORT_SESSION_KEY, sessionId);
   }
+
+  const profileKey = `${SUPPORT_PROFILE_PREFIX}${sessionId}`;
+  let savedProfile = null;
+  try {
+    const raw = localStorage.getItem(profileKey);
+    savedProfile = raw ? JSON.parse(raw) : null;
+  } catch {
+    savedProfile = null;
+  }
+
+  if (savedProfile?.name) nameInput.value = savedProfile.name;
+  if (savedProfile?.contact) contactInput.value = savedProfile.contact;
 
   supportElements = {
     wrapper,
@@ -1330,22 +1368,18 @@ function initSupportWidget() {
     messages,
     sessionId,
     lastMessageTimestamp: 0,
-    renderedBotMessages: new Set(),
+    renderedMessages: new Set(),
+    hasSentInitialMessage: Boolean(savedProfile?.contact),
+    profileKey,
   };
+
+  updateSupportWidgetLanguage();
 
   const setOpen = (isOpen) => {
     wrapper.classList.toggle("is-open", isOpen);
     panel.setAttribute("aria-hidden", isOpen ? "false" : "true");
     launcher.setAttribute("aria-expanded", isOpen ? "true" : "false");
     if (isOpen) questionInput.focus();
-  };
-
-  const addMessageToUI = (text, isUser) => {
-    const message = document.createElement("div");
-    message.className = `support-message ${isUser ? "support-message-user" : "support-message-bot"}`;
-    message.textContent = text;
-    messages.appendChild(message);
-    messages.scrollTop = messages.scrollHeight;
   };
 
   // Polling for new messages from support
@@ -1361,22 +1395,21 @@ function initSupportWidget() {
       const data = await response.json();
       if (!data.ok || !Array.isArray(data.messages)) return;
 
+      let hasUserMessageInHistory = false;
       data.messages.forEach((msg) => {
-        const messageKey = msg.id || `${msg.timestamp || 0}:${msg.text || ""}`;
-        if (
-          msg.type === "bot" &&
-          !supportElements.renderedBotMessages.has(messageKey) &&
-          Number(msg.timestamp || 0) >= Number(supportElements.lastMessageTimestamp || 0)
-        ) {
-          addMessageToUI(msg.text, false);
-          supportElements.renderedBotMessages.add(messageKey);
-        }
+        if (msg.type === "user") hasUserMessageInHistory = true;
+        applyMessageFromServer(msg);
 
         supportElements.lastMessageTimestamp = Math.max(
           Number(supportElements.lastMessageTimestamp || 0),
           Number(msg.timestamp || 0),
         );
       });
+
+      if (hasUserMessageInHistory && !supportElements.hasSentInitialMessage) {
+        supportElements.hasSentInitialMessage = true;
+        updateSupportWidgetLanguage();
+      }
     } catch {
       // Silently ignore polling errors
     }
@@ -1406,7 +1439,12 @@ function initSupportWidget() {
     const contact = contactInput.value.trim();
     const question = questionInput.value.trim();
 
-    if (!contact || !question) {
+    if (!question) {
+      status.textContent = localePack.needQuestion;
+      return;
+    }
+
+    if (!supportElements.hasSentInitialMessage && !contact) {
       status.textContent = localePack.needFields;
       return;
     }
@@ -1414,20 +1452,35 @@ function initSupportWidget() {
     sendButton.disabled = true;
 
     try {
-      const result = await sendToTelegram(
+      const payload = {
+        Страница: window.location.href,
+        Вопрос: question,
+      };
+
+      if (!supportElements.hasSentInitialMessage) {
+        payload.Имя = name || "—";
+        payload.Контакт = contact;
+      }
+
+      await sendToTelegram(
         localePack.supportType,
-        {
-          Страница: window.location.href,
-          Имя: name || "—",
-          Контакт: contact,
-          Вопрос: question,
-        },
+        payload,
         null,
         sessionId
       );
 
-      addMessageToUI(question, true);
-      addMessageToUI(localePack.sent, false);
+      if (!supportElements.hasSentInitialMessage) {
+        supportElements.hasSentInitialMessage = true;
+        try {
+          localStorage.setItem(
+            supportElements.profileKey,
+            JSON.stringify({ name: name || "", contact: contact || "" }),
+          );
+        } catch {
+          // Ignore storage write errors
+        }
+        updateSupportWidgetLanguage();
+      }
 
       formElement.reset();
       status.textContent = localePack.sent;
@@ -1442,7 +1495,7 @@ function initSupportWidget() {
     }
   });
 
-  updateSupportWidgetLanguage();
+  pollMessages();
   supportWidgetInitialized = true;
 
   // Cleanup on page unload
