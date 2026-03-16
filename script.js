@@ -7,7 +7,6 @@ const leadStatus = document.getElementById("leadStatus");
 
 const PAGE_LOADED_AT = Date.now();
 const MIN_FILL_MS = 3000;
-const isHomePage = /(^\/|\/index\.html)$/.test(window.location.pathname);
 
 const LANG_KEY = "sitemy_lang";
 const AUTO_TRANSLATE_CACHE_PREFIX = "sitemy_auto_i18n_";
@@ -262,6 +261,7 @@ const storedLang = localStorage.getItem(LANG_KEY);
 let currentLang = LOCALE[storedLang] ? storedLang : "ru";
 const currentPath = window.location.pathname.split("/").pop() || "index.html";
 const pageKey = currentPath === "index.html" || currentPath === "" ? "index" : currentPath.replace(".html", "");
+const isHomePage = pageKey === "index";
 
 let isCalcSubmitting = false;
 let isLeadSubmitting = false;
