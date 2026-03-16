@@ -7,6 +7,8 @@ const leadStatus = document.getElementById("leadStatus");
 
 const PAGE_LOADED_AT = Date.now();
 const MIN_FILL_MS = 3000;
+const API_URL_STORAGE_KEY = "sitemy_api_url";
+let siteConfigPromise = null;
 
 const LANG_KEY = "sitemy_lang";
 const AUTO_TRANSLATE_CACHE_PREFIX = "sitemy_auto_i18n_";
@@ -1234,11 +1236,54 @@ function setFormSubmitting(formEl, isSubmitting) {
   submitButton.textContent = isSubmitting ? t("sending") : submitButton.dataset.defaultText;
 }
 
+async function getApiUrlFromSiteConfig() {
+  if (!siteConfigPromise) {
+    siteConfigPromise = fetch("site-config.json", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .catch(() => null);
+  }
+
+  try {
+    const config = await siteConfigPromise;
+    const apiBaseUrl = typeof config?.apiBaseUrl === "string" ? config.apiBaseUrl.trim() : "";
+    return apiBaseUrl;
+  } catch {
+    return "";
+  }
+}
+
+async function resolveApiBaseUrl() {
+  const runtimeUrl = typeof window.SITEMY_API_URL === "string" ? window.SITEMY_API_URL.trim() : "";
+  if (runtimeUrl) return runtimeUrl;
+
+  const metaUrl = document.querySelector('meta[name="sitemy-api-url"]')?.getAttribute("content")?.trim() || "";
+  if (metaUrl) return metaUrl;
+
+  const storedUrl = localStorage.getItem(API_URL_STORAGE_KEY)?.trim() || "";
+  if (storedUrl) return storedUrl;
+
+  const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  if (isLocalHost) return "";
+
+  return await getApiUrlFromSiteConfig();
+}
+
+async function resolveTelegramEndpoint() {
+  const baseUrl = await resolveApiBaseUrl();
+  if (!baseUrl) return "/api/telegram";
+  return `${baseUrl.replace(/\/$/, "")}/api/telegram`;
+}
+
 async function sendToTelegram(type, payload, formEl) {
   const hp = formEl ? (formEl.querySelector('[name="_hp"]')?.value || "") : "";
   const loadedAt = formEl ? (formEl.querySelector('[name="_loadedAt"]')?.value || "") : "";
+  const endpoint = await resolveTelegramEndpoint();
 
-  const response = await fetch("/api/telegram", {
+  if (window.location.hostname.endsWith("github.io") && endpoint === "/api/telegram") {
+    throw new Error("Для GitHub Pages не настроен публичный API endpoint");
+  }
+
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type, payload, _hp: hp, _loadedAt: loadedAt }),
@@ -1267,6 +1312,10 @@ function formatSubmitError(error) {
 
   if (message.includes("Failed to fetch")) {
     return t("noApi");
+  }
+
+  if (message.includes("не настроен публичный API endpoint")) {
+    return "Для сайта на GitHub Pages нужно подключить внешний API (см. README: Cloudflare Worker).";
   }
 
   return `${t("sendErr")}: ${message}`;

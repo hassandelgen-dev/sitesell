@@ -33,6 +33,58 @@ TELEGRAM_CHAT_ID=ваш_chat_id
 
 После этого формы на сайте будут отправлять заявки в Telegram через `/api/telegram`.
 
+## GitHub Pages + Telegram (рабочий прод-вариант)
+
+На GitHub Pages нет backend, поэтому `/api/telegram` напрямую не работает.
+Используйте Cloudflare Worker как безопасный прокси (токен бота остаётся на сервере, не в браузере).
+
+### 1) Деплой Worker
+
+```bash
+cd /Users/max/Documents/SiteMy/cloudflare
+npx wrangler login
+npx wrangler secret put TELEGRAM_BOT_TOKEN
+npx wrangler secret put TELEGRAM_CHAT_ID
+npx wrangler secret put ALLOWED_ORIGINS
+npx wrangler deploy
+```
+
+Для `ALLOWED_ORIGINS` укажите origin сайта, например:
+
+```text
+https://hassandelgen-dev.github.io
+```
+
+После деплоя получите URL вида:
+
+```text
+https://sitemy-telegram-proxy.<your-subdomain>.workers.dev
+```
+
+### 2) Подключение endpoint для всех пользователей (рекомендуется)
+
+Откройте `site-config.json` и укажите URL вашего Worker:
+
+```json
+{
+	"apiBaseUrl": "https://sitemy-telegram-proxy.<your-subdomain>.workers.dev"
+}
+```
+
+Закоммитьте и запушьте `site-config.json` в GitHub Pages.
+После деплоя все посетители сайта будут отправлять заявки через Worker.
+
+### 2.1) Быстрый локальный override (только для вашего браузера)
+
+```js
+localStorage.setItem("sitemy_api_url", "https://sitemy-telegram-proxy.<your-subdomain>.workers.dev");
+location.reload();
+```
+
+### 3) Локальная разработка
+
+Локально ничего менять не нужно: при `localhost` сайт продолжает использовать `/api/telegram`.
+
 ## Что поменять в первую очередь
 
 1. Контакты внизу страницы (`Телефон`, `Telegram`, `Email` в `index.html`)
