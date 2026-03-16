@@ -94,6 +94,13 @@ a {
   gap: 18px;
 }
 
+.nav-focus {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
 .brand {
   font-size: 1.25rem;
   font-weight: 900;
@@ -285,7 +292,7 @@ h1 span {
 
 .hero-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   margin-top: 26px;
 }
@@ -778,6 +785,10 @@ h1 span {
   color: var(--muted);
 }
 
+.pain-grid h3 {
+  margin-top: 0;
+}
+
 /* ── Social proof ────────────────────────── */
 
 .social-stats {
@@ -821,6 +832,36 @@ h1 span {
 
 .reviews-grid {
   margin-top: 28px;
+}
+
+.proof-grid {
+  margin-top: 16px;
+}
+
+.proof-shot h3 {
+  margin-top: 0;
+}
+
+.proof-shot p {
+  margin-bottom: 0;
+  font-style: italic;
+}
+
+.logo-row {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.logo-chip {
+  padding: 0.56rem 0.86rem;
+  border-radius: 999px;
+  border: 1px solid rgba(96, 126, 214, 0.54);
+  background: rgba(14, 27, 69, 0.78);
+  color: #dce6ff;
+  font-size: 0.86rem;
+  font-weight: 700;
 }
 
 .review {
@@ -1505,7 +1546,7 @@ details[open] .faq-icon::after {
   display: grid;
   grid-template-columns: 1fr 0.94fr;
   gap: 16px;
-  align-items: center;
+  align-items: start;
 }
 
 .lead-form {
@@ -1739,6 +1780,10 @@ details[open] .faq-icon::after {
   }
 
   .nav-links {
+    display: none;
+  }
+
+  .nav-focus {
     display: none;
   }
 
