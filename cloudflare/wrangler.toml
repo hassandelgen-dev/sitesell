@@ -2,5 +2,10 @@ name = "sitemy-telegram-proxy"
 main = "worker.js"
 compatibility_date = "2026-03-16"
 
+[[kv_namespaces]]
+binding = "CHATS"
+id = "9d6f16e9489444978d212a831898a389"
+preview_id = "d0bbc1b0e229495ca524dd2b576d3bc4"
+
 [observability]
 enabled = true

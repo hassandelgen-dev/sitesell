@@ -1305,6 +1305,13 @@ function initSupportWidget() {
     return;
   }
 
+  // Generate or restore session ID
+  let sessionId = localStorage.getItem("supportSessionId");
+  if (!sessionId) {
+    sessionId = "sess_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("supportSessionId", sessionId);
+  }
+
   supportElements = {
     wrapper,
     launcher,
@@ -1321,6 +1328,8 @@ function initSupportWidget() {
     sendButton,
     status,
     messages,
+    sessionId,
+    lastMessageTimestamp: 0,
   };
 
   const setOpen = (isOpen) => {
@@ -1330,9 +1339,49 @@ function initSupportWidget() {
     if (isOpen) questionInput.focus();
   };
 
+  const addMessageToUI = (text, isUser) => {
+    const message = document.createElement("div");
+    message.className = `support-message ${isUser ? "support-message-user" : "support-message-bot"}`;
+    message.textContent = text;
+    messages.appendChild(message);
+    messages.scrollTop = messages.scrollHeight;
+  };
+
+  // Polling for new messages from support
+  const pollMessages = async () => {
+    if (!supportElements) return;
+    try {
+      const endpoint = await resolveTelegramEndpoint();
+      const messagesUrl = endpoint.replace("/api/telegram", `/api/telegram/messages/${sessionId}`);
+      
+      const response = await fetch(messagesUrl);
+      if (!response.ok) return;
+
+      const data = await response.json();
+      if (!data.ok || !Array.isArray(data.messages)) return;
+
+      data.messages.forEach((msg) => {
+        if (msg.type === "bot" && msg.timestamp > supportElements.lastMessageTimestamp) {
+          addMessageToUI(msg.text, false);
+          supportElements.lastMessageTimestamp = msg.timestamp;
+        }
+      });
+    } catch {
+      // Silently ignore polling errors
+    }
+  };
+
+  // Start polling every 3 seconds when panel is open
+  const pollingInterval = setInterval(() => {
+    if (wrapper.classList.contains("is-open")) {
+      pollMessages();
+    }
+  }, 3000);
+
   launcher.addEventListener("click", () => {
     const currentlyOpen = wrapper.classList.contains("is-open");
     setOpen(!currentlyOpen);
+    if (!currentlyOpen) pollMessages();
   });
 
   closeButton.addEventListener("click", () => setOpen(false));
@@ -1354,26 +1403,27 @@ function initSupportWidget() {
     sendButton.disabled = true;
 
     try {
-      await sendToTelegram(localePack.supportType, {
-        Страница: window.location.href,
-        Имя: name || "—",
-        Контакт: contact,
-        Вопрос: question,
-      });
+      const result = await sendToTelegram(
+        localePack.supportType,
+        {
+          Страница: window.location.href,
+          Имя: name || "—",
+          Контакт: contact,
+          Вопрос: question,
+        },
+        null,
+        sessionId
+      );
 
-      const userMessage = document.createElement("div");
-      userMessage.className = "support-message support-message-user";
-      userMessage.textContent = question;
-      messages.appendChild(userMessage);
+      addMessageToUI(question, true);
+      addMessageToUI(localePack.sent, false);
+      supportElements.lastMessageTimestamp = Date.now();
 
-      const botMessage = document.createElement("div");
-      botMessage.className = "support-message support-message-bot";
-      botMessage.textContent = localePack.sent;
-      messages.appendChild(botMessage);
-
-      messages.scrollTop = messages.scrollHeight;
       formElement.reset();
       status.textContent = localePack.sent;
+      
+      // Start polling for responses
+      pollMessages();
     } catch (error) {
       const fallback = `${localePack.failed} ${formatSubmitError(error)}`;
       status.textContent = fallback;
@@ -1384,6 +1434,11 @@ function initSupportWidget() {
 
   updateSupportWidgetLanguage();
   supportWidgetInitialized = true;
+
+  // Cleanup on page unload
+  window.addEventListener("beforeunload", () => {
+    if (pollingInterval) clearInterval(pollingInterval);
+  });
 }
 
 function applyLanguage() {
@@ -1480,7 +1535,7 @@ async function resolveTelegramEndpoint() {
   return `${baseUrl.replace(/\/$/, "")}/api/telegram`;
 }
 
-async function sendToTelegram(type, payload, formEl) {
+async function sendToTelegram(type, payload, formEl, sessionId = null) {
   const hp = formEl ? (formEl.querySelector('[name="_hp"]')?.value || "") : "";
   const loadedAt = formEl ? (formEl.querySelector('[name="_loadedAt"]')?.value || "") : "";
   const endpoint = await resolveTelegramEndpoint();
@@ -1489,10 +1544,13 @@ async function sendToTelegram(type, payload, formEl) {
     throw new Error("Для GitHub Pages не настроен публичный API endpoint");
   }
 
+  const body = { type, payload, _hp: hp, _loadedAt: loadedAt };
+  if (sessionId) body.sessionId = sessionId;
+
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type, payload, _hp: hp, _loadedAt: loadedAt }),
+    body: JSON.stringify(body),
   });
 
   let result = null;
@@ -1507,6 +1565,8 @@ async function sendToTelegram(type, payload, formEl) {
     const message = result?.message || `HTTP ${response.status}`;
     throw new Error(`${message}${details}`);
   }
+
+  return result;
 }
 
 function formatSubmitError(error) {

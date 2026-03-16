@@ -16,8 +16,8 @@ function getAllowedOrigin(request, env) {
 function buildCorsHeaders(request, env) {
   const allowedOrigin = getAllowedOrigin(request, env);
   const headers = {
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Max-Age": "86400",
   };
 
@@ -48,10 +48,11 @@ function isSpamLike(honeypot, loadedAt) {
   return elapsed < MIN_FILL_MS;
 }
 
-function buildTelegramText(type, payload) {
+function buildTelegramText(sessionId, type, payload) {
   const lines = [
-    "📩 Новая заявка с сайта",
-    `Тип формы: ${type}`,
+    "📩 Новое сообщение в чат поддержки",
+    `ID сессии: ${sessionId}`,
+    `Тип: ${type}`,
     `Дата: ${new Date().toLocaleString("uk-UA")}`,
     "",
   ];
@@ -63,63 +64,106 @@ function buildTelegramText(type, payload) {
   return lines.join("\n");
 }
 
+function generateSessionId() {
+  return "sess_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+}
+
+async function saveMessage(env, sessionId, message) {
+  if (!env.CHATS) return false;
+  
+  const key = `session:${sessionId}`;
+  const data = await env.CHATS.get(key, "json") || { messages: [], createdAt: Date.now() };
+  data.messages.push(message);
+  await env.CHATS.put(key, JSON.stringify(data), { expirationTtl: 86400 * 7 });
+  return true;
+}
+
+async function getMessages(env, sessionId) {
+  if (!env.CHATS) return [];
+  
+  const key = `session:${sessionId}`;
+  const data = await env.CHATS.get(key, "json") || { messages: [] };
+  return data.messages || [];
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: buildCorsHeaders(request, env) });
     }
 
-    const pathname = new URL(request.url).pathname;
-    if (pathname !== "/api/telegram") {
-      return jsonResponse(request, env, 404, { ok: false, message: "Not found" });
+    const url = new URL(request.url);
+    const pathname = url.pathname;
+
+    // Получить сообщения сессии
+    if (pathname.match(/^\/api\/telegram\/messages\/[^\/]+$/) && request.method === "GET") {
+      const sessionId = pathname.split("/").pop();
+      try {
+        const messages = await getMessages(env, sessionId);
+        return jsonResponse(request, env, 200, { ok: true, messages });
+      } catch {
+        return jsonResponse(request, env, 500, { ok: false, message: "Ошибка при получении сообщений" });
+      }
     }
 
-    if (request.method !== "POST") {
-      return jsonResponse(request, env, 405, { ok: false, message: "Method not allowed" });
-    }
-
-    const botToken = env.TELEGRAM_BOT_TOKEN;
-    const chatId = env.TELEGRAM_CHAT_ID;
-    if (!botToken || !chatId) {
-      return jsonResponse(request, env, 500, { ok: false, message: "Server is not configured" });
-    }
-
-    try {
-      const body = await request.json();
-      const formType = body?.type;
-      const payload = body?.payload;
-      const honeypot = body?._hp;
-      const loadedAt = body?._loadedAt;
-
-      if (!formType || !payload || typeof payload !== "object" || Array.isArray(payload)) {
-        return jsonResponse(request, env, 400, { ok: false, message: "Некорректные данные формы" });
+    // Отправить новое сообщение
+    if (pathname === "/api/telegram" && request.method === "POST") {
+      const botToken = env.TELEGRAM_BOT_TOKEN;
+      const chatId = env.TELEGRAM_CHAT_ID;
+      if (!botToken || !chatId) {
+        return jsonResponse(request, env, 500, { ok: false, message: "Server is not configured" });
       }
 
-      if (isSpamLike(honeypot, loadedAt)) {
-        return jsonResponse(request, env, 200, { ok: true });
-      }
+      try {
+        const body = await request.json();
+        const formType = body?.type;
+        const payload = body?.payload;
+        const honeypot = body?._hp;
+        const loadedAt = body?._loadedAt;
+        const sessionId = body?.sessionId || generateSessionId();
 
-      const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: buildTelegramText(formType, payload),
-        }),
-      });
+        if (!formType || !payload || typeof payload !== "object" || Array.isArray(payload)) {
+          return jsonResponse(request, env, 400, { ok: false, message: "Некорректные данные формы" });
+        }
 
-      const telegramResult = await telegramResponse.json();
-      if (!telegramResponse.ok || !telegramResult?.ok) {
-        return jsonResponse(request, env, 502, {
-          ok: false,
-          message: "Telegram API вернул ошибку",
-          details: telegramResult,
+        if (isSpamLike(honeypot, loadedAt)) {
+          return jsonResponse(request, env, 200, { ok: true, sessionId });
+        }
+
+        // Сохранить сообщение пользователя в KV
+        await saveMessage(env, sessionId, {
+          id: generateSessionId(),
+          type: "user",
+          text: payload.Question || payload.Вопрос || JSON.stringify(payload),
+          timestamp: Date.now(),
+          data: payload,
         });
-      }
 
-      return jsonResponse(request, env, 200, { ok: true });
-    } catch {
-      return jsonResponse(request, env, 500, { ok: false, message: "Внутренняя ошибка сервера" });
+        // Отправить в Telegram
+        const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: buildTelegramText(sessionId, formType, payload),
+          }),
+        });
+
+        const telegramResult = await telegramResponse.json();
+        if (!telegramResponse.ok || !telegramResult?.ok) {
+          return jsonResponse(request, env, 502, {
+            ok: false,
+            message: "Telegram API error",
+            details: telegramResult,
+          });
+        }
+
+        return jsonResponse(request, env, 200, { ok: true, sessionId });
+      } catch {
+        return jsonResponse(request, env, 500, { ok: false, message: "Internal server error" });
+      }
     }
+
+    return jsonResponse(request, env, 404, { ok: false, message: "Not found" });
   },
 };
