@@ -18,6 +18,8 @@ let autoTranslateRunId = 0;
 let originalDomCaptured = false;
 const originalTextNodes = [];
 const originalAttributeNodes = [];
+let supportWidgetInitialized = false;
+let supportElements = null;
 
 const LOCALE = {
   ru: {
@@ -151,6 +153,54 @@ const LOCALE = {
       shop: "4–8 weeks",
       fast: "fast-track launch (priority)",
     },
+  },
+};
+
+const SUPPORT_LOCALE = {
+  ru: {
+    title: "Техподдержка",
+    subtitle: "Обычно отвечаем до 15 минут",
+    welcome: "Здравствуйте! Опишите вопрос — поддержка свяжется с вами по контакту.",
+    name: "Ваше имя",
+    contact: "Телефон / Telegram / Email",
+    question: "Ваш вопрос",
+    send: "Отправить в поддержку",
+    sent: "Сообщение отправлено ✅",
+    needFields: "Укажите контакт и вопрос.",
+    failed: "Не удалось отправить сообщение.",
+    open: "Поддержка",
+    close: "Свернуть",
+    supportType: "Техподдержка",
+  },
+  uk: {
+    title: "Техпідтримка",
+    subtitle: "Зазвичай відповідаємо до 15 хвилин",
+    welcome: "Вітаємо! Опишіть питання — підтримка зв'яжеться з вами за контактом.",
+    name: "Ваше ім'я",
+    contact: "Телефон / Telegram / Email",
+    question: "Ваше питання",
+    send: "Надіслати в підтримку",
+    sent: "Повідомлення надіслано ✅",
+    needFields: "Вкажіть контакт і питання.",
+    failed: "Не вдалося надіслати повідомлення.",
+    open: "Підтримка",
+    close: "Згорнути",
+    supportType: "Техпідтримка",
+  },
+  en: {
+    title: "Support",
+    subtitle: "We usually reply within 15 minutes",
+    welcome: "Hi! Describe your question — support will contact you using your details.",
+    name: "Your name",
+    contact: "Phone / Telegram / Email",
+    question: "Your question",
+    send: "Send to support",
+    sent: "Message sent ✅",
+    needFields: "Please provide contact details and your question.",
+    failed: "Failed to send message.",
+    open: "Support",
+    close: "Minimize",
+    supportType: "Support",
   },
 };
 
@@ -301,12 +351,14 @@ function captureOriginalDomState() {
     const tag = parent.tagName;
     if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT") continue;
     if (parent.closest(".lang-switch")) continue;
+    if (parent.closest(".support-widget")) continue;
 
     originalTextNodes.push({ node, value: node.nodeValue || "" });
   }
 
   document.querySelectorAll("[placeholder], [title], [aria-label]").forEach((element) => {
     if (element.closest(".lang-switch")) return;
+    if (element.closest(".support-widget")) return;
     ["placeholder", "title", "aria-label"].forEach((attrName) => {
       if (!element.hasAttribute(attrName)) return;
       originalAttributeNodes.push({
@@ -423,6 +475,7 @@ async function autoTranslateRemainingContent() {
     const tag = parent.tagName;
     if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT") continue;
     if (parent.closest(".lang-switch")) continue;
+    if (parent.closest(".support-widget")) continue;
 
     const text = getTrimmedNodeText(node.nodeValue || "");
     if (!text || !hasCyrillic(text)) continue;
@@ -431,6 +484,7 @@ async function autoTranslateRemainingContent() {
 
   document.querySelectorAll("[placeholder], [title], [aria-label]").forEach((element) => {
     if (element.closest(".lang-switch")) return;
+    if (element.closest(".support-widget")) return;
     ["placeholder", "title", "aria-label"].forEach((attrName) => {
       const attrValue = element.getAttribute(attrName);
       if (!attrValue) return;
@@ -1181,6 +1235,157 @@ function updateCommonUiLanguage() {
   });
 }
 
+function getSupportLocale() {
+  return SUPPORT_LOCALE[currentLang] || SUPPORT_LOCALE.ru;
+}
+
+function updateSupportWidgetLanguage() {
+  if (!supportElements) return;
+  const localePack = getSupportLocale();
+  supportElements.title.textContent = localePack.title;
+  supportElements.subtitle.textContent = localePack.subtitle;
+  supportElements.welcome.textContent = localePack.welcome;
+  supportElements.nameInput.placeholder = localePack.name;
+  supportElements.contactInput.placeholder = localePack.contact;
+  supportElements.questionInput.placeholder = localePack.question;
+  supportElements.sendButton.textContent = localePack.send;
+  supportElements.launcherLabel.textContent = localePack.open;
+  supportElements.closeButton.textContent = localePack.close;
+}
+
+function initSupportWidget() {
+  if (supportWidgetInitialized || !document.body) return;
+
+  const wrapper = document.createElement("aside");
+  wrapper.className = "support-widget";
+  wrapper.innerHTML = `
+    <button type="button" class="support-launcher" aria-expanded="false" aria-label="Support chat">
+      <span class="support-launcher-dot"></span>
+      <span class="support-launcher-label">Support</span>
+    </button>
+    <section class="support-panel" aria-hidden="true">
+      <div class="support-head">
+        <div>
+          <strong class="support-title">Support</strong>
+          <p class="support-subtitle"></p>
+        </div>
+        <button type="button" class="support-close">Minimize</button>
+      </div>
+      <div class="support-messages">
+        <div class="support-message support-message-bot support-welcome"></div>
+      </div>
+      <form class="support-form" novalidate>
+        <input name="supportName" type="text" autocomplete="name" />
+        <input name="supportContact" type="text" autocomplete="tel" required />
+        <textarea name="supportQuestion" rows="3" required></textarea>
+        <button type="submit" class="btn">Send</button>
+        <p class="support-status" aria-live="polite"></p>
+      </form>
+    </section>
+  `;
+
+  document.body.appendChild(wrapper);
+
+  const launcher = wrapper.querySelector(".support-launcher");
+  const launcherLabel = wrapper.querySelector(".support-launcher-label");
+  const panel = wrapper.querySelector(".support-panel");
+  const closeButton = wrapper.querySelector(".support-close");
+  const formElement = wrapper.querySelector(".support-form");
+  const title = wrapper.querySelector(".support-title");
+  const subtitle = wrapper.querySelector(".support-subtitle");
+  const welcome = wrapper.querySelector(".support-welcome");
+  const nameInput = wrapper.querySelector('input[name="supportName"]');
+  const contactInput = wrapper.querySelector('input[name="supportContact"]');
+  const questionInput = wrapper.querySelector('textarea[name="supportQuestion"]');
+  const sendButton = wrapper.querySelector('.support-form button[type="submit"]');
+  const status = wrapper.querySelector(".support-status");
+  const messages = wrapper.querySelector(".support-messages");
+
+  if (!launcher || !launcherLabel || !panel || !closeButton || !formElement || !title || !subtitle || !welcome || !nameInput || !contactInput || !questionInput || !sendButton || !status || !messages) {
+    return;
+  }
+
+  supportElements = {
+    wrapper,
+    launcher,
+    launcherLabel,
+    panel,
+    closeButton,
+    formElement,
+    title,
+    subtitle,
+    welcome,
+    nameInput,
+    contactInput,
+    questionInput,
+    sendButton,
+    status,
+    messages,
+  };
+
+  const setOpen = (isOpen) => {
+    wrapper.classList.toggle("is-open", isOpen);
+    panel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+    launcher.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    if (isOpen) questionInput.focus();
+  };
+
+  launcher.addEventListener("click", () => {
+    const currentlyOpen = wrapper.classList.contains("is-open");
+    setOpen(!currentlyOpen);
+  });
+
+  closeButton.addEventListener("click", () => setOpen(false));
+
+  formElement.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    status.textContent = "";
+
+    const localePack = getSupportLocale();
+    const name = nameInput.value.trim();
+    const contact = contactInput.value.trim();
+    const question = questionInput.value.trim();
+
+    if (!contact || !question) {
+      status.textContent = localePack.needFields;
+      return;
+    }
+
+    sendButton.disabled = true;
+
+    try {
+      await sendToTelegram(localePack.supportType, {
+        Страница: window.location.href,
+        Имя: name || "—",
+        Контакт: contact,
+        Вопрос: question,
+      });
+
+      const userMessage = document.createElement("div");
+      userMessage.className = "support-message support-message-user";
+      userMessage.textContent = question;
+      messages.appendChild(userMessage);
+
+      const botMessage = document.createElement("div");
+      botMessage.className = "support-message support-message-bot";
+      botMessage.textContent = localePack.sent;
+      messages.appendChild(botMessage);
+
+      messages.scrollTop = messages.scrollHeight;
+      formElement.reset();
+      status.textContent = localePack.sent;
+    } catch (error) {
+      const fallback = `${localePack.failed} ${formatSubmitError(error)}`;
+      status.textContent = fallback;
+    } finally {
+      sendButton.disabled = false;
+    }
+  });
+
+  updateSupportWidgetLanguage();
+  supportWidgetInitialized = true;
+}
+
 function applyLanguage() {
   autoTranslateRunId += 1;
   restoreOriginalDomState();
@@ -1192,6 +1397,7 @@ function applyLanguage() {
   localizeInnerPagesContent();
   autoTranslateRemainingContent();
   updateLanguageButtons();
+  updateSupportWidgetLanguage();
 
   [form, leadForm].forEach((formEl) => {
     const submitButton = formEl?.querySelector('button[type="submit"]');
@@ -1466,6 +1672,7 @@ function initRevealAnimations() {
 }
 
 initLanguageSwitcher();
+initSupportWidget();
 captureOriginalDomState();
 applyLanguage();
 initRevealAnimations();

@@ -1549,6 +1549,158 @@ details[open] .faq-icon::after {
   color: var(--muted);
 }
 
+.support-widget {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 120;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.support-launcher {
+  border: 1px solid rgba(115, 136, 255, 0.62);
+  border-radius: 999px;
+  background: linear-gradient(100deg, rgba(106, 139, 255, 0.96), rgba(101, 239, 216, 0.96));
+  color: #081632;
+  font-weight: 800;
+  padding: 0.68rem 0.98rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(19, 34, 86, 0.4);
+}
+
+.support-launcher-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #0af08e;
+  box-shadow: 0 0 0 6px rgba(10, 240, 142, 0.2);
+}
+
+.support-panel {
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(70vh, 560px);
+  border: 1px solid rgba(90, 121, 210, 0.7);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(18, 35, 87, 0.92), rgba(10, 20, 54, 0.97)),
+    rgba(10, 20, 54, 0.96);
+  box-shadow: 0 26px 56px rgba(4, 12, 36, 0.5);
+  overflow: hidden;
+  transform: translateY(8px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  display: grid;
+  grid-template-rows: auto minmax(120px, 1fr) auto;
+}
+
+.support-widget.is-open .support-panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.support-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(91, 122, 214, 0.38);
+}
+
+.support-title {
+  display: block;
+  color: #f3f7ff;
+}
+
+.support-subtitle {
+  margin: 4px 0 0;
+  color: #adc0ed;
+  font-size: 0.8rem;
+}
+
+.support-close {
+  border: 1px solid rgba(95, 126, 210, 0.52);
+  background: rgba(10, 24, 64, 0.7);
+  color: #d7e4ff;
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.support-messages {
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+  overflow: auto;
+}
+
+.support-message {
+  max-width: 88%;
+  padding: 9px 11px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.support-message-bot {
+  justify-self: start;
+  border: 1px solid rgba(93, 126, 217, 0.4);
+  background: rgba(14, 31, 79, 0.74);
+  color: #dce8ff;
+}
+
+.support-message-user {
+  justify-self: end;
+  border: 1px solid rgba(101, 239, 216, 0.34);
+  background: rgba(19, 55, 102, 0.8);
+  color: #dcfff8;
+}
+
+.support-form {
+  border-top: 1px solid rgba(91, 122, 214, 0.38);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.support-form input,
+.support-form textarea {
+  border: 1px solid rgba(84, 112, 191, 0.72);
+  border-radius: 10px;
+  background: rgba(8, 20, 55, 0.74);
+  color: #edf2ff;
+  font: inherit;
+  padding: 0.62rem 0.72rem;
+}
+
+.support-form input:focus,
+.support-form textarea:focus {
+  outline: none;
+  border-color: #8aa6ff;
+  box-shadow: 0 0 0 4px rgba(116, 136, 255, 0.2);
+}
+
+.support-form .btn {
+  width: 100%;
+  padding: 0.72rem 0.9rem;
+  border-radius: 12px;
+}
+
+.support-status {
+  margin: 2px 0 0;
+  color: #9ff7e9;
+  font-size: 0.82rem;
+  min-height: 1.1em;
+}
+
 ::selection {
   background: rgba(132, 154, 255, 0.38);
   color: #f7f9ff;
@@ -1647,6 +1799,16 @@ details[open] .faq-icon::after {
     width: 50px;
     height: 50px;
     border-radius: 14px;
+  }
+
+  .support-widget {
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .support-panel {
+    width: min(100vw - 20px, 360px);
+    max-height: 74vh;
   }
 }
 
