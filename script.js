@@ -545,48 +545,48 @@ async function autoTranslateRemainingContent() {
 
 const PAGE_META_TRANSLATIONS = {
   landing: {
-    uk: { title: "Розробка лендінгу під ключ в Україні | SiteMy", description: "Розробка лендінгу під ключ в Україні: структура, тексти, дизайн, адаптивна верстка, SEO-підготовка і запуск реклами." },
-    en: { title: "Turnkey Landing Page Development in Ukraine | SiteMy", description: "Turnkey landing page development in Ukraine: structure, copy, design, responsive layout, SEO setup and ad launch." },
+    uk: { title: "Розробка лендінгу під ключ в Україні | Monvera", description: "Розробка лендінгу під ключ в Україні: структура, тексти, дизайн, адаптивна верстка, SEO-підготовка і запуск реклами." },
+    en: { title: "Turnkey Landing Page Development in Ukraine | Monvera", description: "Turnkey landing page development in Ukraine: structure, copy, design, responsive layout, SEO setup and ad launch." },
   },
   corporate: {
-    uk: { title: "Розробка корпоративного сайту під ключ | SiteMy", description: "Корпоративний сайт під ключ: структура, дизайн, сторінки послуг, блог, SEO-архітектура і запуск для бізнесу." },
-    en: { title: "Turnkey Corporate Website Development | SiteMy", description: "Corporate website development: structure, design, service pages, blog, SEO architecture, analytics and launch." },
+    uk: { title: "Розробка корпоративного сайту під ключ | Monvera", description: "Корпоративний сайт під ключ: структура, дизайн, сторінки послуг, блог, SEO-архітектура і запуск для бізнесу." },
+    en: { title: "Turnkey Corporate Website Development | Monvera", description: "Corporate website development: structure, design, service pages, blog, SEO architecture, analytics and launch." },
   },
   ecommerce: {
-    uk: { title: "Створення інтернет-магазину та web-додатку | SiteMy", description: "Створення інтернет-магазину та web-додатку під ключ: каталог, кабінет, CRM, оплати, аналітика і масштабування." },
-    en: { title: "Online Store & Web App Development | SiteMy", description: "Turnkey online store and web app development: catalog, account, CRM, payments, analytics and scaling." },
+    uk: { title: "Створення інтернет-магазину та web-додатку | Monvera", description: "Створення інтернет-магазину та web-додатку під ключ: каталог, кабінет, CRM, оплати, аналітика і масштабування." },
+    en: { title: "Online Store & Web App Development | Monvera", description: "Turnkey online store and web app development: catalog, account, CRM, payments, analytics and scaling." },
   },
   redesign: {
-    uk: { title: "Редизайн сайту під ключ — зростання конверсії | SiteMy", description: "Редизайн сайту: аудит, нова структура, сучасний UI/UX, підвищення довіри та конверсії." },
-    en: { title: "Website Redesign for Higher Conversion | SiteMy", description: "Website redesign: audit, new structure, modern UI/UX, improved trust and better conversion." },
+    uk: { title: "Редизайн сайту під ключ — зростання конверсії | Monvera", description: "Редизайн сайту: аудит, нова структура, сучасний UI/UX, підвищення довіри та конверсії." },
+    en: { title: "Website Redesign for Higher Conversion | Monvera", description: "Website redesign: audit, new structure, modern UI/UX, improved trust and better conversion." },
   },
   seo: {
-    uk: { title: "SEO-підготовка сайту під ключ | SiteMy", description: "SEO-підготовка сайту: структура, мета-теги, семантика, швидкість, індексація та технічна база під зростання." },
-    en: { title: "Turnkey SEO Website Setup | SiteMy", description: "SEO website setup: structure, meta tags, semantics, speed, indexing and technical foundation for growth." },
+    uk: { title: "SEO-підготовка сайту під ключ | Monvera", description: "SEO-підготовка сайту: структура, мета-теги, семантика, швидкість, індексація та технічна база під зростання." },
+    en: { title: "Turnkey SEO Website Setup | Monvera", description: "SEO website setup: structure, meta tags, semantics, speed, indexing and technical foundation for growth." },
   },
   kyiv: {
-    uk: { title: "Створення сайтів у Києві під ключ | SiteMy", description: "Створення сайтів у Києві: лендінги, корпоративні сайти, інтернет-магазини та редизайн для бізнесу." },
-    en: { title: "Website Development in Kyiv | SiteMy", description: "Website development in Kyiv: landing pages, corporate websites, online stores and redesign for business." },
+    uk: { title: "Створення сайтів у Києві під ключ | Monvera", description: "Створення сайтів у Києві: лендінги, корпоративні сайти, інтернет-магазини та редизайн для бізнесу." },
+    en: { title: "Website Development in Kyiv | Monvera", description: "Website development in Kyiv: landing pages, corporate websites, online stores and redesign for business." },
   },
   dnipro: {
-    uk: { title: "Розробка сайтів у Дніпрі під ключ | SiteMy", description: "Розробка сайтів у Дніпрі: лендінги, корпоративні сайти, інтернет-магазини і редизайн для бізнесу." },
-    en: { title: "Website Development in Dnipro | SiteMy", description: "Website development in Dnipro: landing pages, corporate websites, online stores and redesign for business." },
+    uk: { title: "Розробка сайтів у Дніпрі під ключ | Monvera", description: "Розробка сайтів у Дніпрі: лендінги, корпоративні сайти, інтернет-магазини і редизайн для бізнесу." },
+    en: { title: "Website Development in Dnipro | Monvera", description: "Website development in Dnipro: landing pages, corporate websites, online stores and redesign for business." },
   },
   odesa: {
-    uk: { title: "Створення сайтів в Одесі під ключ | SiteMy", description: "Створення сайтів в Одесі: лендінги, корпоративні сайти, інтернет-магазини та редизайн для бізнесу." },
-    en: { title: "Website Development in Odesa | SiteMy", description: "Website development in Odesa: landing pages, corporate websites, online stores and redesign for business." },
+    uk: { title: "Створення сайтів в Одесі під ключ | Monvera", description: "Створення сайтів в Одесі: лендінги, корпоративні сайти, інтернет-магазини та редизайн для бізнесу." },
+    en: { title: "Website Development in Odesa | Monvera", description: "Website development in Odesa: landing pages, corporate websites, online stores and redesign for business." },
   },
   lviv: {
-    uk: { title: "Створення сайтів у Львові під ключ | SiteMy", description: "Створення сайтів у Львові для бізнесу: лендінги, корпоративні сайти, інтернет-магазини, редизайн." },
-    en: { title: "Website Development in Lviv | SiteMy", description: "Website development in Lviv for businesses: landing pages, corporate websites, online stores and redesign." },
+    uk: { title: "Створення сайтів у Львові під ключ | Monvera", description: "Створення сайтів у Львові для бізнесу: лендінги, корпоративні сайти, інтернет-магазини, редизайн." },
+    en: { title: "Website Development in Lviv | Monvera", description: "Website development in Lviv for businesses: landing pages, corporate websites, online stores and redesign." },
   },
   kharkiv: {
-    uk: { title: "Розробка сайтів у Харкові під ключ | SiteMy", description: "Розробка сайтів у Харкові для бізнесу: структура, дизайн, код, SEO-підготовка та запуск." },
-    en: { title: "Website Development in Kharkiv | SiteMy", description: "Website development in Kharkiv: structure, design, code, SEO setup and launch for business." },
+    uk: { title: "Розробка сайтів у Харкові під ключ | Monvera", description: "Розробка сайтів у Харкові для бізнесу: структура, дизайн, код, SEO-підготовка та запуск." },
+    en: { title: "Website Development in Kharkiv | Monvera", description: "Website development in Kharkiv: structure, design, code, SEO setup and launch for business." },
   },
   zaporizhzhia: {
-    uk: { title: "Створення сайтів у Запоріжжі під ключ | SiteMy", description: "Створення сайтів у Запоріжжі для бізнесу: лендінги, корпоративні сайти, інтернет-магазини, редизайн." },
-    en: { title: "Website Development in Zaporizhzhia | SiteMy", description: "Website development in Zaporizhzhia for business: landing pages, corporate websites, online stores and redesign." },
+    uk: { title: "Створення сайтів у Запоріжжі під ключ | Monvera", description: "Створення сайтів у Запоріжжі для бізнесу: лендінги, корпоративні сайти, інтернет-магазини, редизайн." },
+    en: { title: "Website Development in Zaporizhzhia | Monvera", description: "Website development in Zaporizhzhia for business: landing pages, corporate websites, online stores and redesign." },
   },
 };
 
@@ -836,7 +836,7 @@ function localizeExtendedHomeContent() {
   const extended = {
     uk: {
       "#services-seo .section-kicker": "Послуги",
-      "#services-seo h2": "Які сайти можна замовити в SiteMy",
+      "#services-seo h2": "Які сайти можна замовити в Monvera",
       "#services-seo .section-lead": "Якщо вам потрібне створення сайту під ключ, я закриваю весь цикл робіт: аналіз ніші, структура, тексти, UI/UX-дизайн, верстка, програмування, SEO-підготовка і запуск.",
       "#services-seo .keyword-cloud a:nth-of-type(1)": "створення сайту під ключ",
       "#services-seo .keyword-cloud a:nth-of-type(2)": "розробка лендінгу",
@@ -915,7 +915,7 @@ function localizeExtendedHomeContent() {
     },
     en: {
       "#services-seo .section-kicker": "Services",
-      "#services-seo h2": "What websites you can order from SiteMy",
+      "#services-seo h2": "What websites you can order from Monvera",
       "#services-seo .section-lead": "If you need turnkey website development, I handle the full cycle: niche analysis, structure, copy, UI/UX design, coding, SEO setup, and launch.",
       "#services-seo .keyword-cloud a:nth-of-type(1)": "turnkey website development",
       "#services-seo .keyword-cloud a:nth-of-type(2)": "landing page development",
