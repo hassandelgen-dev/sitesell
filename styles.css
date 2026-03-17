@@ -1554,9 +1554,7 @@ details[open] .faq-icon::after {
   right: 18px;
   bottom: 18px;
   z-index: 120;
-  display: grid;
-  justify-items: end;
-  gap: 10px;
+  display: block;
 }
 
 .support-launcher {
@@ -1587,6 +1585,9 @@ details[open] .faq-icon::after {
 }
 
 .support-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
   width: min(360px, calc(100vw - 24px));
   max-height: min(70vh, 560px);
   border: 1px solid rgba(90, 121, 210, 0.7);
@@ -1814,6 +1815,7 @@ details[open] .faq-icon::after {
   .support-panel {
     width: min(100vw - 20px, 360px);
     max-height: 74vh;
+    right: 0;
   }
 }
 
