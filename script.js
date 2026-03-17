@@ -1387,75 +1387,7 @@ function initSupportWidget() {
 
   const pollIntervalMs = 1200;
 
-  const dragState = {
-    pointerId: null,
-    isDragging: false,
-    moved: false,
-    startX: 0,
-    startY: 0,
-    offsetX: 0,
-    offsetY: 0,
-  };
-
-  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-
-  const beginDrag = (event) => {
-    const rect = wrapper.getBoundingClientRect();
-    dragState.pointerId = event.pointerId;
-    dragState.isDragging = true;
-    dragState.moved = false;
-    dragState.startX = event.clientX;
-    dragState.startY = event.clientY;
-    dragState.offsetX = event.clientX - rect.left;
-    dragState.offsetY = event.clientY - rect.top;
-
-    wrapper.classList.add("is-dragging");
-    wrapper.style.right = "auto";
-    wrapper.style.bottom = "auto";
-    wrapper.style.left = `${rect.left}px`;
-    wrapper.style.top = `${rect.top}px`;
-
-    if (typeof launcher.setPointerCapture === "function") {
-      launcher.setPointerCapture(event.pointerId);
-    }
-  };
-
-  const moveDrag = (event) => {
-    if (!dragState.isDragging || dragState.pointerId !== event.pointerId) return;
-
-    const nextLeft = event.clientX - dragState.offsetX;
-    const nextTop = event.clientY - dragState.offsetY;
-    const maxLeft = window.innerWidth - wrapper.offsetWidth;
-    const maxTop = window.innerHeight - wrapper.offsetHeight;
-
-    wrapper.style.left = `${clamp(nextLeft, 0, Math.max(0, maxLeft))}px`;
-    wrapper.style.top = `${clamp(nextTop, 0, Math.max(0, maxTop))}px`;
-
-    if (Math.abs(event.clientX - dragState.startX) > 4 || Math.abs(event.clientY - dragState.startY) > 4) {
-      dragState.moved = true;
-    }
-  };
-
-  const endDrag = (event) => {
-    if (!dragState.isDragging || dragState.pointerId !== event.pointerId) return;
-
-    if (typeof launcher.releasePointerCapture === "function") {
-      launcher.releasePointerCapture(event.pointerId);
-    }
-
-    wrapper.classList.remove("is-dragging");
-    dragState.pointerId = null;
-    dragState.isDragging = false;
-
-    if (dragState.moved) {
-      event.preventDefault();
-    }
-  };
-
-  launcher.addEventListener("pointerdown", beginDrag);
-  launcher.addEventListener("pointermove", moveDrag);
-  launcher.addEventListener("pointerup", endDrag);
-  launcher.addEventListener("pointercancel", endDrag);
+  window.addEventListener("resize", applyDefaultSupportPosition);
 
   // Polling for new messages from support
   const pollMessages = async () => {
@@ -1504,10 +1436,6 @@ function initSupportWidget() {
   });
 
   launcher.addEventListener("click", () => {
-    if (dragState.moved) {
-      dragState.moved = false;
-      return;
-    }
     const currentlyOpen = wrapper.classList.contains("is-open");
     setOpen(!currentlyOpen);
     if (!currentlyOpen) pollMessages();

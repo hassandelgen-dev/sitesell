@@ -1568,12 +1568,7 @@ details[open] .faq-icon::after {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  touch-action: none;
   box-shadow: 0 14px 28px rgba(19, 34, 86, 0.4);
-}
-
-.support-widget.is-dragging .support-launcher {
-  cursor: grabbing;
 }
 
 .support-launcher-dot {
