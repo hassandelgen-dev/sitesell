@@ -946,6 +946,12 @@ h1 span {
   gap: 18px;
 }
 
+#process .timeline.four {
+  margin-top: 28px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
 .timeline.six {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -993,6 +999,36 @@ h1 span {
   gap: 14px;
 }
 
+#process .timeline-step {
+  min-height: 0;
+  padding: 18px 20px;
+  grid-template-columns: 50px 1fr;
+  align-items: center;
+  border-radius: 16px;
+  border-color: rgba(84, 118, 209, 0.7);
+  background:
+    linear-gradient(180deg, rgba(16, 31, 76, 0.88), rgba(9, 20, 52, 0.94)),
+    rgba(9, 20, 52, 0.94);
+}
+
+#process .timeline-step::before {
+  display: none;
+}
+
+#process .timeline-step::after {
+  width: 120px;
+  height: 120px;
+  right: -45px;
+  top: -44px;
+  background: radial-gradient(circle, rgba(116, 136, 255, 0.22) 0%, transparent 72%);
+}
+
+#process .timeline-step:hover {
+  transform: translateY(-2px);
+  border-color: rgba(132, 162, 255, 0.95);
+  box-shadow: 0 20px 38px rgba(3, 10, 30, 0.42);
+}
+
 .timeline-step::before {
   content: "";
   position: absolute;
@@ -1037,11 +1073,24 @@ h1 span {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+#process .timeline-step span {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  font-size: 0.96rem;
+}
+
 .timeline-content {
   position: relative;
   z-index: 1;
   display: grid;
   align-content: start;
+}
+
+#process .timeline-content p {
+  color: #e1ecff;
+  font-size: 0.98rem;
+  line-height: 1.55;
 }
 
 .timeline-eyebrow {
@@ -1079,6 +1128,22 @@ h1 span {
 }
 
 /* ── Calculator ────────────────────────────── */
+
+.calc-intro-kicker {
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-size: 0.77rem;
+  color: #96aae4;
+  font-weight: 700;
+}
+
+.calc-intro-title {
+  margin: 0 0 10px;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
 
 .calc-header {
   display: flex;
@@ -1830,6 +1895,10 @@ details[open] .faq-icon::after {
   .footer-grid {
     flex-direction: column;
   }
+
+  #process .timeline.four {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1861,6 +1930,18 @@ details[open] .faq-icon::after {
     width: 50px;
     height: 50px;
     border-radius: 14px;
+  }
+
+  #process .timeline-step {
+    padding: 16px;
+    gap: 10px;
+    grid-template-columns: 46px 1fr;
+  }
+
+  #process .timeline-step span {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
   }
 
   .support-widget {
