@@ -1369,15 +1369,6 @@ function initSupportWidget() {
 
   updateSupportWidgetLanguage();
 
-  const applyDefaultSupportPosition = () => {
-    wrapper.style.left = "auto";
-    wrapper.style.top = "auto";
-    wrapper.style.right = window.innerWidth <= 1000 ? "10px" : "18px";
-    wrapper.style.bottom = window.innerWidth <= 1000 ? "10px" : "18px";
-  };
-
-  applyDefaultSupportPosition();
-
   const setOpen = (isOpen) => {
     wrapper.classList.toggle("is-open", isOpen);
     panel.setAttribute("aria-hidden", isOpen ? "false" : "true");
@@ -1386,8 +1377,6 @@ function initSupportWidget() {
   };
 
   const pollIntervalMs = 1200;
-
-  window.addEventListener("resize", applyDefaultSupportPosition);
 
   // Polling for new messages from support
   const pollMessages = async () => {

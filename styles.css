@@ -1551,13 +1551,18 @@ details[open] .faq-icon::after {
 
 .support-widget {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  right: 0;
+  bottom: 0;
   z-index: 120;
   display: block;
+  pointer-events: none;
 }
 
 .support-launcher {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 122;
   border: 1px solid rgba(115, 136, 255, 0.62);
   border-radius: 999px;
   background: linear-gradient(100deg, rgba(106, 139, 255, 0.96), rgba(101, 239, 216, 0.96));
@@ -1569,6 +1574,8 @@ details[open] .faq-icon::after {
   gap: 8px;
   cursor: pointer;
   box-shadow: 0 14px 28px rgba(19, 34, 86, 0.4);
+  pointer-events: auto;
+  transition: transform 0.22s ease;
 }
 
 .support-launcher-dot {
@@ -1580,9 +1587,10 @@ details[open] .faq-icon::after {
 }
 
 .support-panel {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 10px);
+  position: fixed;
+  right: 18px;
+  bottom: 72px;
+  z-index: 121;
   width: min(360px, calc(100vw - 24px));
   max-height: min(70vh, 560px);
   border: 1px solid rgba(90, 121, 210, 0.7);
@@ -1604,6 +1612,10 @@ details[open] .faq-icon::after {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
+}
+
+.support-widget.is-open .support-launcher {
+  transform: translateY(-8px);
 }
 
 .support-head {
@@ -1803,6 +1815,11 @@ details[open] .faq-icon::after {
   }
 
   .support-widget {
+    right: 0;
+    bottom: 0;
+  }
+
+  .support-launcher {
     right: 10px;
     bottom: 10px;
   }
@@ -1810,7 +1827,8 @@ details[open] .faq-icon::after {
   .support-panel {
     width: min(100vw - 20px, 360px);
     max-height: 74vh;
-    right: 0;
+    right: 10px;
+    bottom: 64px;
   }
 }
 
